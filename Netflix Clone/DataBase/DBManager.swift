@@ -58,4 +58,68 @@ final class DBManager {
             }
         }
     }
+    
+    
+    enum dataBaseError: Error {
+        case failedToSaveData
+        case failedToFetchData
+        case failedToDeleteData
+    }
+    
+    
+    func downloadTitleWith(model: Title, completion: @escaping (Result<Void, Error>) -> Void) {
+        let context = persistentContainer.viewContext
+        
+        let item = TitleItem(context: context)
+        
+        item.original_name = model.original_name
+        item.original_title = model.original_title
+        item.media_type = model.media_type
+        item.overview = model.overview
+        item.poster_path = model.poster_path
+        item.release_date = model.release_date
+        item.id = Int64(model.id)
+        item.vote_average = model.vote_average
+        item.vote_count = Int64(model.vote_count)
+        
+        
+        do {
+            try context.save()
+            completion(.success(()))
+        } catch {
+            print(error.localizedDescription)
+            completion(.failure(dataBaseError.failedToSaveData))
+        }
+    }
+    
+    
+    func fetchingTitlesFromDataBase(completion: @escaping (Result<[TitleItem], Error>) -> Void) {
+        let context = persistentContainer.viewContext
+        
+        let request = TitleItem.fetchRequest()
+        
+        do {
+            let titles = try context.fetch(request)
+            completion(.success(titles))
+        } catch {
+            completion(.failure(dataBaseError.failedToFetchData))
+        }
+        
+    }
+    
+    
+    func deleteTitleWith(model: TitleItem, completion: @escaping (Result<Void, Error>) -> Void) {
+        let context = persistentContainer.viewContext
+        
+        let item = TitleItem(context: context)
+        
+        context.delete(model) // askint the dataBase meneger to delete certain object
+        
+        do {
+            try context.save()
+            completion(.success(()))
+        } catch {
+            completion(.failure(dataBaseError.failedToDeleteData))
+        }
+    }
 }
